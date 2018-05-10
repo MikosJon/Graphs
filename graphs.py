@@ -1,10 +1,11 @@
+from collections import namedtuple
+
+Arrow = namedtuple('Arrow', 'head tail weight')
+
 class DirectedGraph:
-
-    _splitSign = '-->' 
-
     def __init__(self, vertices, arrows):
         self._V = vertices
-        self._A = arrows
+        self._A = set(arrows)
 
     @property
     def vertices(self):
@@ -13,26 +14,15 @@ class DirectedGraph:
     @vertices.setter
     def vertices(self, values):
         self._V = values
-        temp = {}
-        for arrow, val in self.arrows.items():
-            head, tail = arrow.split(self._splitSign)
-            if head in values and tail in values:
-                temp[self._makeArrow(head, tail)] = val
-        self._A = temp
+        self._A = set(arrow for arrow in self.arrows if arrow.head in values and arrow.tail in values)
         
-
     @property
     def arrows(self):
         return self._A
 
     @arrows.setter
     def arrows(self, values):
-        temp = {}
-        for arrow, val in values.items():
-            head, tail = arrow.split(self._splitSign)
-            if head in self.vertices and tail in self.vertices:
-                temp[self._makeArrow(head, tail)] = val
-        self._A = temp
+        self._A = set(arrow for arrow in self.arrows if arrow.head in self.vertices and arrow.tail in self.vertices)
 
     @property
     def size(self):
@@ -41,27 +31,36 @@ class DirectedGraph:
     @property
     def adjacencyMatrix(self):
         mat = [[0] * self.size for _ in range(self.size)]
-        for idx, vertex in enumerate(self.vertices):
+        for i, vertex in enumerate(self.vertices):
             for j, other in enumerate(self.vertices):
                 if self.arrowFromTo(vertex, other):
-                    mat[idx][j] = 1
+                    mat[i][j] = 1
         return mat
 
     def pathFromTo(self, start, end):
-        # Djikstra maybe?
+        # visited = {start:True}
+        # path = ''
+        # priorityQueue = [Arrow(start, start, 0)]
+        # length = 0
+        # while priorityQueue:
+        #     priorityQueue.sort(key=lambda x: x[-1])
+        #     begin, curr, weight = priorityQueue.pop(0)
+        #     path += begin
+        #     length += weight
+
         pass
 
     def arrowFromTo(self, start, end):
-        return self._makeArrow(start, end) in self.arrows
+        return any([start == arrow.head and end == arrow.tail for arrow in self.arrows])
 
     def isBalanced(self):
         return all([self.indegree(vertex) == self.outdegree(vertex) for vertex in self.vertices])
 
     def indegree(self, vertex):            
-        return [end for start, *split, end in self.arrows].count(vertex)
+        return [arrow.tail for arrow in self.arrows].count(vertex)
 
     def outdegree(self, vertex):
-        return [start for start, *split, end in self.arrows].count(vertex)
+        return [arrow.head for arrow in self.arrows].count(vertex)
 
     def isSource(self, vertex):
         return self.indegree(vertex) == 0 and self.outdegree(vertex) != 0
@@ -72,13 +71,10 @@ class DirectedGraph:
     def isInternal(self, vertex):
         return not self.isSource(vertex) and not self.isSink(vertex)
 
-    def _makeArrow(self, start, end):
-        return self._splitSign.join([start, end])
-
     def __repr__(self):
-        return '{} with vertices {} and arrows {}.'.format(self.__class__.__name__, ', '.join(self.vertices), ', '.join('{} with weight {}'.format(arrow, val) for arrow, val in self.arrows.items()))
+        return '{} with vertices {} and arrows {}.'.format(self.__class__.__name__, ', '.join(self.vertices), ', '.join('{}-->{} with weight {}'.format(*arrow) for arrow in self.arrows))
 
 
-a = DirectedGraph(['A', 'B', 'C', 'D', 'E'], {'A-->B': 1, 'B-->A': 2, 'C-->A': 5})
-a.vertices = ['A', 'B', 'C']
-print(a, a.isBalanced())
+a = DirectedGraph(['A', 'B', 'C', 'D', 'E'], set([Arrow('A', 'B', 4)]))
+print(a)
+print(a.adjacencyMatrix)

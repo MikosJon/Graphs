@@ -1,11 +1,12 @@
 from collections import namedtuple
+import heapq
 
 Arrow = namedtuple('Arrow', 'head tail weight')
 
 class DirectedGraph:
-    def __init__(self, vertices, arrows):
-        self._V = vertices
-        self._A = set(arrows)
+    def __init__(self, *, vertices=[], arrows=[]):
+        self._V = set(vertices)
+        self._A = set(Arrow(*arrow) for arrow in arrows)
 
     @property
     def vertices(self):
@@ -13,7 +14,7 @@ class DirectedGraph:
 
     @vertices.setter
     def vertices(self, values):
-        self._V = values
+        self._V = set(values)
         self._A = set(arrow for arrow in self.arrows if arrow.head in values and arrow.tail in values)
         
     @property
@@ -38,18 +39,18 @@ class DirectedGraph:
         return mat
 
     def pathFromTo(self, start, end):
-        priorityQueue = [([], start, 0)]
+        priorityQueue = []
+        heapq.heappush(priorityQueue, (0, [], start))
         while priorityQueue:
-            priorityQueue.sort(key=lambda x: -x[2])
-            all_prev, curr, sum_weights = priorityQueue.pop()
+            sum_weights, all_prev, curr = heapq.heappop(priorityQueue)
+            new_path = all_prev + [curr]
             if curr == end:
-                return (all_prev + [end], sum_weights)
+                return (new_path, sum_weights)
             for neighbour in [arrow for arrow in self.arrows if arrow.head == curr and arrow.tail not in all_prev]:
-                priorityQueue.append((all_prev+[curr], neighbour.tail, sum_weights+neighbour.weight))
+                heapq.heappush(priorityQueue, (sum_weights+neighbour.weight, new_path, neighbour.tail))
             
 
-
-    def arrowFromTo(self, start, end):
+    def isArrowFromTo(self, start, end):
         return any([start == arrow.head and end == arrow.tail for arrow in self.arrows])
 
     def isBalanced(self):
@@ -71,8 +72,9 @@ class DirectedGraph:
         return not self.isSource(vertex) and not self.isSink(vertex)
 
     def __repr__(self):
-        return '{} with vertices {} and arrows {}.'.format(self.__class__.__name__, ', '.join(self.vertices), ', '.join('{}-->{} with weight {}'.format(*arrow) for arrow in self.arrows))
+        return '{}(vertices=[{}], edges=[{}])'.format(self.__class__.__name__, ', '.join("'{}'".format(vertex) for vertex in self.vertices), ', '.join("('{}', '{}', {})".format(*arrow) for arrow in self.arrows))
 
 
-a = DirectedGraph(['A', 'B', 'C', 'D', 'E'], set([Arrow('A', 'B', 4), Arrow('A', 'C', 2), Arrow('B', 'C', 5), Arrow('C', 'B', 1), Arrow('B', 'A', 2), Arrow('A', 'D', 1), Arrow('D', 'E', 4), Arrow('E', 'A', 2)]))
+a = DirectedGraph(vertices=['A', 'B', 'C', 'D', 'E'], arrows=[('A', 'B', 4), ('A', 'C', 2), ('B', 'C', 5), ('C', 'B', 1), ('B', 'A', 2), ('A', 'D', 1), ('D', 'E', 4), ('E', 'A', 2)])
+print(a)
 print(a.pathFromTo('B', 'E'))

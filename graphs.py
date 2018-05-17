@@ -38,17 +38,16 @@ class DirectedGraph:
         return mat
 
     def pathFromTo(self, start, end):
-        # visited = {start:True}
-        # path = ''
-        # priorityQueue = [Arrow(start, start, 0)]
-        # length = 0
-        # while priorityQueue:
-        #     priorityQueue.sort(key=lambda x: x[-1])
-        #     begin, curr, weight = priorityQueue.pop(0)
-        #     path += begin
-        #     length += weight
+        priorityQueue = [([], start, 0)]
+        while priorityQueue:
+            priorityQueue.sort(key=lambda x: -x[2])
+            all_prev, curr, sum_weights = priorityQueue.pop()
+            if curr == end:
+                return (all_prev + [end], sum_weights)
+            for neighbour in [arrow for arrow in self.arrows if arrow.head == curr and arrow.tail not in all_prev]:
+                priorityQueue.append((all_prev+[curr], neighbour.tail, sum_weights+neighbour.weight))
+            
 
-        pass
 
     def arrowFromTo(self, start, end):
         return any([start == arrow.head and end == arrow.tail for arrow in self.arrows])
@@ -75,6 +74,5 @@ class DirectedGraph:
         return '{} with vertices {} and arrows {}.'.format(self.__class__.__name__, ', '.join(self.vertices), ', '.join('{}-->{} with weight {}'.format(*arrow) for arrow in self.arrows))
 
 
-a = DirectedGraph(['A', 'B', 'C', 'D', 'E'], set([Arrow('A', 'B', 4)]))
-print(a)
-print(a.adjacencyMatrix)
+a = DirectedGraph(['A', 'B', 'C', 'D', 'E'], set([Arrow('A', 'B', 4), Arrow('A', 'C', 2), Arrow('B', 'C', 5), Arrow('C', 'B', 1), Arrow('B', 'A', 2), Arrow('A', 'D', 1), Arrow('D', 'E', 4), Arrow('E', 'A', 2)]))
+print(a.pathFromTo('B', 'E'))

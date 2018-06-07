@@ -41,14 +41,21 @@ class DirectedGraph:
     def pathFromTo(self, start, end):
         priorityQueue = []
         heapq.heappush(priorityQueue, (0, [], start))
+        visited = set()
         while priorityQueue:
             sum_weights, all_prev, curr = heapq.heappop(priorityQueue)
+            if curr in visited:
+                continue
             new_path = all_prev + [curr]
+            visited.add(curr)
             if curr == end:
-                return (new_path, sum_weights)
-            for neighbour in [arrow for arrow in self.arrows if arrow.head == curr and arrow.tail not in all_prev]:
-                heapq.heappush(priorityQueue, (sum_weights+neighbour.weight, new_path, neighbour.tail))
-            
+                return new_path, sum_weights
+            for neighbour_arrow in [arrow for arrow in self.arrows if arrow.head == curr]:
+                heapq.heappush(priorityQueue, (sum_weights+neighbour_arrow.weight, new_path, neighbour_arrow.tail))
+        return None, None
+    
+    def neighbours(self, vertex):
+        return set(arrow.tail for arrow in self.arrows if arrow.head == vertex)
 
     def isArrowFromTo(self, start, end):
         return any([start == arrow.head and end == arrow.tail for arrow in self.arrows])
@@ -72,7 +79,9 @@ class DirectedGraph:
         return not self.isSource(vertex) and not self.isSink(vertex)
 
     def __repr__(self):
-        return '{}(vertices=[{}], edges=[{}])'.format(self.__class__.__name__, ', '.join("'{}'".format(vertex) for vertex in self.vertices), ', '.join("('{}', '{}', {})".format(*arrow) for arrow in self.arrows))
+        return '{}(vertices={}, edges={})'.format(self.__class__.__name__,
+                                                  '{' + ', '.join("'{}'".format(vertex) for vertex in self.vertices) + '}',
+                                                  '{' + ', '.join("('{}', '{}', {})".format(*arrow) for arrow in self.arrows) + '}')
 
 
 a = DirectedGraph(vertices=['A', 'B', 'C', 'D', 'E'], arrows=[('A', 'B', 4), ('A', 'C', 2), ('B', 'C', 5), ('C', 'B', 1), ('B', 'A', 2), ('A', 'D', 1), ('D', 'E', 4), ('E', 'A', 2)])

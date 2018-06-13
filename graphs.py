@@ -1,18 +1,17 @@
 from collections import namedtuple, defaultdict, deque
 from heapq import heappush, heappop
 
+Arrow = namedtuple('Arrow', 'head tail weight')
+Arrow.__new__.__defaults__ = (1,)
+
 class DirectedGraph:
-    Arrow = namedtuple('Arrow', 'head tail weight')
-    Arrow.__new__.__defaults__ = (1,)
-
-
     def __init__(self, *, vertices=set(), arrows=set(), vertexFill=False):
         self._V, self._A = set(), set()
         for head, tail, *value in arrows:
             if value:
-                self.arrows |= {self.Arrow(head, tail, value[0])}
+                self.arrows |= {Arrow(head, tail, value[0])}
             else:
-                self.arrows |= {self.Arrow(head, tail)}
+                self.arrows |= {Arrow(head, tail)}
 
         if not vertexFill:
             self.vertices = set(vertex for vertex in vertices)
@@ -49,7 +48,7 @@ class DirectedGraph:
     def __repr__(self):
         return '{}(vertices={}, arrows={})'.format(self.__class__.__name__,
                                                   '{' + ', '.join("{}".format(vertex) for vertex in self.vertices) + '}',
-                                                  '{' + ', '.join("self.Arrow({}, {}, {})".format(*arrow) for arrow in self.arrows) + '}')
+                                                  '{' + ', '.join("Arrow({}, {}, {})".format(*arrow) for arrow in self.arrows) + '}')
 
     def __getitem__(self, values):
         new_vertices = set(values)
@@ -71,7 +70,7 @@ class DirectedGraph:
 
     @arrows.setter
     def arrows(self, values):
-        self._A = set(self.Arrow(*arrow) for arrow in values)
+        self._A = set(Arrow(*arrow) for arrow in values)
 
     @property
     def size(self):
@@ -154,16 +153,16 @@ class DirectedGraph:
         return vertex in self.vertices
 
     def addArrow(self, arrow):
-        self.arrows |= {self.Arrow(*arrow)}
+        self.arrows |= {Arrow(*arrow)}
 
     def removeArrow(self, arrow):
-        self.arrows -= {self.Arrow(*arrow)}
+        self.arrows -= {Arrow(*arrow)}
 
     def hasArrow(self, arrow):
-        return self.Arrow(*arrow) in self.arrows
+        return Arrow(*arrow) in self.arrows
 
     def flipArrow(self, arrow):
-        return self.Arrow(arrow.tail, arrow.head, arrow.weight)
+        return Arrow(arrow.tail, arrow.head, arrow.weight)
 
     def isolatedVertices(self):
         return set(vertex for vertex in self.vertices if self.degree(vertex) == 0)
